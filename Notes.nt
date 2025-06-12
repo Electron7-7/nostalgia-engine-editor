@@ -1,2 +1,7 @@
 [06/11/25]
 This is the Nostalgia Editor, the editor program for making games in the Nostalgia Engine. I've finally made Nostalgia into a library that apps can "drive". Now, I can work separately on the apps/games and the engine. Yippee!
+
+[06/12/25]
+Today I want to start working on the editor application so I can eventually begin working on map files.
+
+Well, I spent the first hour redoing the Makefile, but it was worth it to get rid of all that nasty nasty shit.
