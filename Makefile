@@ -78,10 +78,13 @@ INCLUDE_SELECT ?= $(INCLUDE_LINUX)
 INCLUDE = $(INCLUDE_SELECT)
 
 # LIBRARIES_LINUX   := -lz -lbz2 -lpng16 -lbrotlidec -lpthread -L src/system/linux/lib -l glfw3 -l:libfreetype.a
-LIBRARIES_LINUX   := -L src/lib/linux -l NostalgiaEngine
-LIBRARIES_WINDOWS := -L src/lib/windows
+LIBRARIES_LINUX := src/lib/linux
+LIBRARIES_WINDOWS := src/lib/windows
+LIBRARIES_DEBUG := debug
+LIBRARIES_RELEASE := release
 LIBRARIES_SELECT ?= $(LIBRARIES_LINUX)
-LIBRARIES = $(LIBRARIES_SELECT)
+LIBRARIES_VERSION ?= $(LIBRARIES_RELEASE)
+LIBRARIES = -L $(LIBRARIES_SELECT)/$(LIBRARIES_VERSION) -l NostalgiaEngine
 
 export BUILD_PATH_LINUX   := linux
 export BUILD_PATH_WINDOWS := windows
@@ -213,12 +216,14 @@ debug: APP_VERSION = $(APP_NAME_DEBUG)
 debug: BUILD_VERSION = $(BUILD_PATH_DEBUG)
 debug:
 	@ echo -e "$(DEFAULT)::Building Debug$(RESET)"
+	$(eval LIBRARIES_VERSION := $(LIBRARIES_DEBUG))
 	$(call recursive_make)
 
 release: APP_VERSION = $(APP_NAME_RELEASE)
 release: BUILD_VERSION = $(BUILD_PATH_RELEASE)
 release:
 	@ echo -e "$(DEFAULT)::Building Release$(RESET)"
+	$(eval LIBRARIES_VERSION := $(LIBRARIES_RELEASE))
 	$(call recursive_make)
 
 resources:
