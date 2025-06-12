@@ -1,258 +1,196 @@
-# LINUX_CXX := @clang++
-# LINUX_CC  := @clang
-
-# ifeq ($(OS),Windows_NT)
-# WINDOWS_CXX := @g++
-# WINDOWS_CC  := @gcc
-# else
-# WINDOWS_CXX := @x86_64-w64-mingw32-g++
-# WINDOWS_CC  := @x86_64-w64-mingw32-gcc
-# endif
-
-# # LSAN_OPTIONS=verbosity=1:log_threads=1 # Use this environment variable for more verbosity with address sanitizer
-# LINUX_DEBUG_FLAGS := -g -Wall -fsanitize=address -D NOSTALGIA_DEBUGGING
-# WINDOWS_DEBUG_FLAGS := $(filter-out -fsanitize=address,$(LINUX_DEBUG_FLAGS))
-# COMMON_FLAGS := -std=c++20 -frtti -D COMPILER_FORWARD_DECLARATIONS
-
-# LINUX_INCLUDE := -I src/system/linux/common
-# WINDOWS_INCLUDE := -I src/system/windows/common
-# COMMON_INCLUDE := -I src/ -I src/common -I src/engine
-
-# LINUX_LIBRARIES := -L src/system/linux/lib -l glfw3
-# WINDOWS_LIBRARIES := -L src/system/windows/lib -l glfw-lib-mingw-w64/glfw3 -l gdi32
-
-
-# BUILD_ROOT         := build
-# BUILD_PATH_LINUX   := linux
-# BUILD_PATH_WINDOWS := windows
-# BUILD_PATH_RELEASE := release
-# BUILD_PATH_DEBUG   := debug
-
-# BUILD_ARCH    ?= $(BUILD_PATH_LINUX)
-# BUILD_VERSION ?= $(BUILD_PATH_RELEASE)
-
-# ifeq ($(OS),Windows_NT)
-# APP_NAME_LINUX   := Linux_cross-compiled-on-windows.x86_64
-# else
-# APP_NAME_LINUX   := $(shell uname -s)_$(subst .,_,$(shell uname -r)).$(shell uname -m)
-# endif
-# APP_NAME_WINDOWS := Win64.exe
-# APP_NAME_RELEASE := Nostalgia
-# APP_NAME_DEBUG   := DEBUG__Nostalgia
-
-# THE ABOVE STUFF IS BETTER, BUT NOT FOR THIS PROJECT SO I'M SAVING IT
-
-
 LINUX_CXX := @clang++
 LINUX_CC  := @clang
 
 ifeq ($(OS),Windows_NT)
-	WINDOWS_CXX := @g++
-	WINDOWS_CC  := @gcc
+WINDOWS_CXX := @g++
+WINDOWS_CC  := @gcc
 else
-	WINDOWS_CXX := @x86_64-w64-mingw32-g++
-	WINDOWS_CC  := @x86_64-w64-mingw32-gcc
+WINDOWS_CXX := @x86_64-w64-mingw32-g++
+WINDOWS_CC  := @x86_64-w64-mingw32-gcc
 endif
-
-CXX_SELECT ?= $(LINUX_CXX)
-CC_SELECT  ?= $(LINUX_CC)
-
-CXX = $(CXX_SELECT)
-CC  = $(CC_SELECT)
 
 # LSAN_OPTIONS=verbosity=1:log_threads=1 # Use this environment variable for more verbosity with address sanitizer
-DEBUG_FLAGS  := -g -Wall -fsanitize=address -D NOSTALGIA_DEBUGGING
-COMMON_FLAGS := -D COMPILER_FORWARD_DECLARATIONS
+LINUX_DEBUG_FLAGS := -fsanitize=address
+WINDOWS_DEBUG_FLAGS :=
+export DEBUG_FLAGS ?= -g -Wall -O0 -D NOSTALGIA_DEBUGGING
+COMMON_FLAGS := -frtti -D COMPILER_FORWARD_DECLARATIONS
+CXX_FLAGS := -std=c++20
 
-LINUX_FLAGS   = $(COMMON_FLAGS)
-WINDOWS_FLAGS = $(COMMON_FLAGS) -static -mwindows
+LINUX_INCLUDE := -I src/system/linux/include
+WINDOWS_INCLUDE := -I src/system/windows/include
+COMMON_INCLUDE := -I src/ -I src/include
 
-PROGRAM_FLAGS ?= $(LINUX_FLAGS)
-CXXFLAGS = -std=c++20 -frtti $(PROGRAM_FLAGS)
-CCFLAGS  = $(PROGRAM_FLAGS)
+LINUX_LIBRARIES := -L src/system/linux/lib -l glfw3 -l NostalgiaEngine
+WINDOWS_LIBRARIES := -L src/system/windows/lib -l glfw-lib-mingw-w64/glfw3 -l gdi32 -l NostalgiaEngine
 
-INCLUDE_COMMON  := -I src/ -I src/include
-INCLUDE_LINUX   := $(INCLUDE_COMMON) -I src/system/linux/include   # Not yet implemented
-INCLUDE_WINDOWS := $(INCLUDE_COMMON) -I src/system/windows/include # Not yet implemented
-INCLUDE_SELECT ?= $(INCLUDE_LINUX)
-INCLUDE = $(INCLUDE_SELECT)
 
-# LIBRARIES_LINUX   := -lz -lbz2 -lpng16 -lbrotlidec -lpthread -L src/system/linux/lib -l glfw3 -l:libfreetype.a
-LIBRARIES_LINUX := src/lib/linux
-LIBRARIES_WINDOWS := src/lib/windows
-LIBRARIES_DEBUG := debug
-LIBRARIES_RELEASE := release
-LIBRARIES_SELECT ?= $(LIBRARIES_LINUX)
-LIBRARIES_VERSION ?= $(LIBRARIES_RELEASE)
-LIBRARIES = -L $(LIBRARIES_SELECT)/$(LIBRARIES_VERSION) -l NostalgiaEngine
+BUILD_ROOT         := build
+BUILD_PATH_LINUX   := linux
+BUILD_PATH_WINDOWS := windows
+BUILD_PATH_RELEASE := release
+BUILD_PATH_DEBUG   := debug
 
-export BUILD_PATH_LINUX   := linux
-export BUILD_PATH_WINDOWS := windows
-export BUILD_PATH_RELEASE := release
-export BUILD_PATH_DEBUG   := debug
-
-export BUILD_ROOT := build
-export BUILD_ARCH ?= $(BUILD_PATH_LINUX)
-export BUILD_VERSION ?= $(BUILD_PATH_RELEASE)
-
-export APP_NAME_RELEASE := Nostalgia
-export APP_NAME_DEBUG   := DEBUG__Nostalgia
-export APP_NAME_ENGINE  := Engine
-export APP_NAME_EDITOR  := Editor
-export APP_NAME_LINUX   := $(shell uname -s)_$(subst .,_,$(shell uname -r)).$(shell uname -m)
-export APP_NAME_WINDOWS := Win64.exe
-
-export APP_VERSION ?= $(APP_NAME_RELEASE)
-export APP_TYPE ?= $(APP_NAME_ENGINE)
 ifeq ($(OS),Windows_NT)
-export APP_ARCH ?= $(APP_NAME_WINDOWS)
+APP_NAME_LINUX   := Linux.x86_64
 else
-export APP_ARCH ?= $(APP_NAME_LINUX)
+APP_NAME_LINUX   := $(shell uname -s)_$(subst .,_,$(shell uname -r)).$(shell uname -m)
+endif
+APP_NAME_WINDOWS := Win64.exe
+APP_NAME_RELEASE := Nostalgia
+APP_NAME_DEBUG   := DEBUG__Nostalgia
+
+export BUILD_VERSION ?= $(BUILD_PATH_RELEASE)
+export APP_VERSION   ?= $(APP_NAME_RELEASE)
+
+
+export BUILD_ARCH  ?= $(BUILD_PATH_LINUX)
+export APP_ARCH    ?= $(APP_NAME_LINUX)
+export CXX         ?= $(LINUX_CXX)
+export CC          ?= $(LINUX_CC)
+export INCLUDE     ?= $(COMMON_INCLUDE) $(LINUX_INCLUDE)
+export LDFLAGS     ?= $(LINUX_LIBRARIES)
+ifeq ($(OS),Windows_NT)
+export BUILD_ARCH  ?= $(BUILD_PATH_WINDOWS)
+export APP_ARCH    ?= $(APP_NAME_WINDOWS)
+export CXX         ?= $(WINDOWS_CXX)
+export CC          ?= $(WINDOWS_CC)
+export INCLUDE     ?= $(COMMON_INCLUDE) $(WINDOWS_INCLUDE)
+export LDFLAGS     ?= $(WINDOWS_LIBRARIES)
 endif
 
+export CXXFLAGS    ?= $(COMMON_FLAGS) $(CXX_FLAGS)
+export CCFLAGS     ?= $(COMMON_FLAGS)
 
-export BUILD_OUT ?= $(BUILD_ROOT)/$(BUILD_ARCH)/$(BUILD_VERSION)
-export APP_OUT ?= $(APP_VERSION)_$(APP_TYPE)_$(APP_ARCH)
+export APP_NAME ?= $(APP_VERSION)$(APP_ARCH)
+export BUILD_DIR ?= $(BUILD_ROOT)/$(BUILD_ARCH)_$(BUILD_VERSION)
+
+VPATH := $(SRC_DIRS) $(DIRTY_SRC_DIRS)
 
 SRC_DIRS :=    \
 	src/app    \
 	src/system
 
-RESOURCES_DIR := src/resources
+DIRTY_SRC_DIRS :=            \
+	src/thirdparty/DearImGui \
 
-CXX_SRCS := $(foreach directory,$(SRC_DIRS),$(wildcard $(directory)/*.cpp))
-CC_SRCS  := $(foreach directory,$(SRC_DIRS),$(wildcard $(directory)/*.c))
-CXX_OBJS ?= $(addprefix $(BUILD_OUT)/,$(subst .cpp,.obj,$(CXX_SRCS:src/%=%)))
-CC_OBJS  ?= $(addprefix $(BUILD_OUT)/,$(subst .c,.o,$(CC_SRCS:src/%=%)))
 
-DIRTY_CXX_SRCS := $(foreach directory,$(DIRTY_SRC_DIRS),$(wildcard $(directory)/*.cpp))
+CC_SRCS        := $(foreach directory,$(SRC_DIRS),$(wildcard $(directory)/*.c))
+CXX_SRCS       := $(foreach directory,$(SRC_DIRS),$(wildcard $(directory)/*.cpp))
 DIRTY_CC_SRCS  := $(foreach directory,$(DIRTY_SRC_DIRS),$(wildcard $(directory)/*.c))
-DIRTY_CXX_OBJS ?= $(addprefix $(BUILD_OUT)/,$(subst .cpp,.obj,$(DIRTY_CXX_SRCS:src/%=%)))
-DIRTY_CC_OBJS  ?= $(addprefix $(BUILD_OUT)/,$(subst .c,.o,$(DIRTY_CC_SRCS:src/%=%)))
+DIRTY_CXX_SRCS := $(foreach directory,$(DIRTY_SRC_DIRS),$(wildcard $(directory)/*.cpp))
 
-export SRCS  = $(CXX_SRCS) $(DIRTY_CXX_SRCS) $(CC_SRCS) $(DIRTY_CC_SRCS)
-export OBJS ?= $(CXX_OBJS) $(DIRTY_CXX_OBJS) $(CC_OBJS) $(DIRTY_CC_OBJS)
-
-VPATH := $(SRC_DIRS) $(DIRTY_SRC_DIRS)
-
-export RESET   = \\033[0m
-export BLACK   = \\033[30m
-export RED     = \\033[31m
-export GREEN   = \\033[32m
-export YELLOW  = \\033[33m
-export BLUE    = \\033[34m
-export MAGENTA = \\033[35m
-export CYAN    = \\033[36m
-export WHITE   = \\033[37m
-export DEFAULT = \\033[39m
+export CC_OBJS        ?= $(addprefix $(BUILD_DIR)/,$(subst .c,.o,$(CC_SRCS:src/%=%)))
+export CXX_OBJS       ?= $(addprefix $(BUILD_DIR)/,$(subst .cpp,.obj,$(CXX_SRCS:src/%=%)))
+export DIRTY_CC_OBJS  ?= $(addprefix $(BUILD_DIR)/,$(subst .c,.o,$(DIRTY_CC_SRCS:src/%=%)))
+export DIRTY_CXX_OBJS ?= $(addprefix $(BUILD_DIR)/,$(subst .cpp,.obj,$(DIRTY_CXX_SRCS:src/%=%)))
 
 
-.PHONY: default sublime linux windows debug release resources build clean clean_debug clean_release clean_linux clean_windows clean_dirty
+export RESET   ?= \\033[0m
+export BLACK   ?= \\033[30m
+export RED     ?= \\033[31m
+export GREEN   ?= \\033[32m
+export YELLOW  ?= \\033[33m
+export BLUE    ?= \\033[34m
+export MAGENTA ?= \\033[35m
+export CYAN    ?= \\033[36m
+export WHITE   ?= \\033[37m
+export DEFAULT ?= \\033[39m
 
-default:
-# 	@ $(MAKE) -s ARCHITECTURE="$(BUILD_ARCH)" VERSION="$(BUILD_VERSION)" -C $(RESOURCES_DIR) # Embedded Resources
 
+.PHONY: build sublime linux windows debug release resources build_dir clean clean_debug clean_release clean_linux clean_windows clean_dirty
+
+build:
 	@ echo -e "$(DEFAULT)::Compiling application objects$(RESET)"
 	@ echo -e "$(DEFAULT)::Compile command: $(CXX:@%=%) $(YELLOW)(CXXFLAGS) (INCLUDE)$(DEFAULT) -c <source file> -o <object file>$(RESET)"
 	@ echo -e "$(DEFAULT)::Variable Definitions:$(RESET)"
 	@ echo -e "\t$(YELLOW)CXXFLAGS: $(DEFAULT)$(CXXFLAGS)$(RESET)"
 	@ echo -e "\t$(YELLOW)INCLUDE: $(DEFAULT)$(INCLUDE)$(RESET)\n"
 
-	@ $(MAKE) -s CXXFLAGS="$(CXXFLAGS)" INCLUDE="$(INCLUDE)" APP_VERSION="$(APP_VERSION)" BUILD_OUT="$(BUILD_OUT)" $(OBJS)
+	@ $(MAKE) -s $(CC_OBJS) $(CXX_OBJS) $(DIRTY_CC_OBJS) $(DIRTY_CXX_OBJS)
 
-	@ echo -e "$(DEFAULT)::Linking command: $(CXX:@%=%) (CXXFLAGS) (INCLUDE) $(DEFAULT)-o$(YELLOW) (BUILD_OUT)$(DEFAULT)/$(YELLOW)(APP_OUT) (LIBRARIES)$(RESET)"
+	@ echo -e "$(DEFAULT)::Linking command: $(CXX:@%=%)$(YELLOW) (CXXFLAGS) (CC_OBJS) (CXX_OBJS) (DIRTY_CC_OBJS) (DIRTY_CXX_OBJS) $(DEFAULT)-o$(YELLOW) (BUILD_DIR)$(DEFAULT)/$(YELLOW)(APP_NAME) (LDFLAGS)$(RESET)"
 	@ echo -e "$(DEFAULT)::Variables:$(RESET)"
-	@ echo -e "\t$(YELLOW)LIBRARIES: $(DEFAULT)$(LIBRARIES)$(RESET)"
-	@ echo -e "\t$(YELLOW)OBJS: $(DEFAULT)all the object files previously compiled$(RESET)"
-	@ echo -e "\t$(YELLOW)BUILD_OUT: $(DEFAULT)$(BUILD_OUT)$(RESET)"
-	@ echo -e "\t$(YELLOW)APP_OUT: $(DEFAULT)$(APP_OUT)$(RESET)\n"
+	@ echo -e "\t$(YELLOW)LDFLAGS: $(DEFAULT)$(LDFLAGS)$(RESET)"
+	@ echo -e "\t$(YELLOW)CC_OBJS CXX_OBJS DIRTY_CC_OBJS DIRTY_CXX_OBJS: $(DEFAULT)all the object files previously compiled$(RESET)"
+	@ echo -e "\t$(YELLOW)BUILD_DIR: $(DEFAULT)$(BUILD_DIR)$(RESET)"
+	@ echo -e "\t$(YELLOW)APP_NAME: $(DEFAULT)$(APP_NAME)$(RESET)\n"
 
-	@ -rm -f $(BUILD_OUT)/$(APP_OUT) # in case it already exists
-	@ $(MAKE) -s CXXFLAGS="$(CXXFLAGS)" INCLUDE="$(INCLUDE)" LIBRARIES="$(LIBRARIES)" APP_VERSION="$(APP_VERSION)" BUILD_OUT="$(BUILD_OUT)" $(BUILD_OUT)/$(APP_OUT)
-
-library:
-	@ echo -e "$(DEFAULT)Building: $(CYAN)$(LIBRARY_OUT)/$(LIBRARY_NAME)$(RESET)"
-	$(LIBCOMPILER) $(LIBRARY_OUT)/$(LIBRARY_NAME) $(LIBRARY_OBJS)
-	@ echo -e "$(DEFAULT)Finished Building: $(GREEN)$(LIBRARY_OUT)/$(LIBRARY_NAME)$(RESET)"
+	@ -rm -f $(BUILD_DIR)/$(APP_NAME) # in case it already exists
+	@ $(MAKE) -s $(BUILD_DIR)/$(APP_NAME)
 
 # This target is for disabling the ANSI colors. The reason it's called 'sublime' (and an example use-case) is because
 # Sublime Text's output panel doesn't support ANSI colors natively, so I call this target in every build system that's
 # in my Sublime Text project file for Nostalgia.
-sublime: ;@:
-	$(eval export RESET="")
-	$(eval export BLACK="")
-	$(eval export RED="")
-	$(eval export GREEN="")
-	$(eval export YELLOW="")
-	$(eval export BLUE="")
-	$(eval export MAGENTA="")
-	$(eval export CYAN="")
-	$(eval export WHITE="")
-	$(eval export DEFAULT="")
+sublime:
+	$(eval RESET   := "")
+	$(eval BLACK   := "")
+	$(eval RED     := "")
+	$(eval GREEN   := "")
+	$(eval YELLOW  := "")
+	$(eval BLUE    := "")
+	$(eval MAGENTA := "")
+	$(eval CYAN    := "")
+	$(eval WHITE   := "")
+	$(eval DEFAULT := "")
+	@ echo -e "Output colors disabled"
 
-linux: ;@:
-	@ echo -e "$(DEFAULT)::Building for Linux$(RESET)"
-	$(eval INCLUDE_SELECT = $(INCLUDE_LINUX))
-	$(eval LIBRARIES_SELECT = $(LIBRARIES_LINUX))
-	$(eval PROGRAM_FLAGS = $(LINUX_FLAGS))
-	$(eval CXX_SELECT = $(LINUX_CXX))
-	$(eval CC_SELECT = $(LINUX_CC))
-	$(eval APP_ARCH = $(APP_NAME_LINUX))
-	$(eval BUILD_ARCH = $(BUILD_PATH_LINUX))
+linux:
+ifeq ($(OS),Windows_NT)
+	$(eval APP_ARCH := $(APP_NAME_LINUX))
+	$(eval BUILD_ARCH := $(BUILD_PATH_LINUX))
+	$(eval INCLUDE := $(COMMON_INCLUDE) $(LINUX_INCLUDE))
+	$(eval LDFLAGS := $(LINUX_LIBRARIES))
+endif
+	$(eval CXX := $(LINUX_CXX))
+	$(eval CC := $(LINUX_CC))
+	$(eval DEBUG_FLAGS += $(LINUX_DEBUG_FLAGS))
+	$(eval CXXFLAGS += $(LINUX_FLAGS))
+	@ echo -e "$(DEFAULT)::Architecture - Linux$(RESET)"
 
-windows: ;@:
-	@ echo -e "$(DEFAULT)::Building for Windows$(RESET)"
-	$(eval INCLUDE_SELECT = $(INCLUDE_WINDOWS))
-	$(eval LIBRARIES_SELECT = $(LIBRARIES_WINDOWS))
-	$(eval PROGRAM_FLAGS = $(WINDOWS_FLAGS))
-	$(eval CXX_SELECT = $(WINDOWS_CXX))
-	$(eval CC_SELECT = $(WINDOWS_CC))
-	$(eval APP_ARCH = $(APP_NAME_WINDOWS))
-	$(eval BUILD_ARCH = $(BUILD_PATH_WINDOWS))
-	$(eval DEBUG_FLAGS = $(filter-out -fsanitize=address,$(DEBUG_FLAGS)))
+windows:
+ifneq ($(OS),Windows_NT)
+	$(eval APP_ARCH := $(APP_NAME_WINDOWS))
+	$(eval BUILD_ARCH := $(BUILD_PATH_WINDOWS))
+	$(eval INCLUDE := $(COMMON_INCLUDE) $(WINDOWS_INCLUDE))
+	$(eval LDFLAGS := $(WINDOWS_LIBRARIES))
+endif
+	$(eval CXX := $(WINDOWS_CXX))
+	$(eval CC := $(WINDOWS_CC))
+	$(eval DEBUG_FLAGS := $(filter-out -fsanitize=address,$(DEBUG_FLAGS)) $(WINDOWS_DEBUG_FLAGS))
+	$(eval CXXFLAGS := $(WINDOWS_FLAGS))
+	@ echo -e "$(DEFAULT)::Architecture - Windows$(RESET)"
 
-debug: PROGRAM_FLAGS += $(DEBUG_FLAGS)
-debug: APP_VERSION = $(APP_NAME_DEBUG)
-debug: BUILD_VERSION = $(BUILD_PATH_DEBUG)
 debug:
-	@ echo -e "$(DEFAULT)::Building Debug$(RESET)"
-	$(eval LIBRARIES_VERSION := $(LIBRARIES_DEBUG))
-	$(call recursive_make)
+	$(eval APP_VERSION := $(APP_NAME_DEBUG))
+	$(eval BUILD_VERSION := $(BUILD_PATH_DEBUG))
+	$(eval CXXFLAGS += $(DEBUG_FLAGS))
+	@ echo -e "$(DEFAULT)::Version - Debug$(RESET)"
 
-release: APP_VERSION = $(APP_NAME_RELEASE)
-release: BUILD_VERSION = $(BUILD_PATH_RELEASE)
 release:
 	@ echo -e "$(DEFAULT)::Building Release$(RESET)"
-	$(eval LIBRARIES_VERSION := $(LIBRARIES_RELEASE))
-	$(call recursive_make)
+	$(eval APP_VERSION := $(APP_NAME_RELEASE))
+	$(eval BUILD_VERSION := $(BUILD_PATH_RELEASE))
+	@ echo -e "$(DEFAULT)::Version - Release$(RESET)"
 
-resources:
-	@ $(MAKE) -s ARCHITECTURE="$(BUILD_ARCH)" VERSION="$(BUILD_VERSION)" -C $(RESOURCES_DIR)
+build_dir:
+	@ -mkdir -p $(BUILD_DIR)
 
-
-define recursive_make
-	@ $(MAKE) -s OBJS="$(OBJS)" CXX_SELECT="$(CXX_SELECT)" CC_SELECT="$(CC_SELECT)" PROGRAM_FLAGS="$(PROGRAM_FLAGS)" CXX_FLAGS="$(CXX_FLAGS)" INCLUDE="$(INCLUDE)" LIBRARIES="$(LIBRARIES)" APP_VERSION="$(APP_VERSION)" BUILD_VERSION="$(BUILD_VERSION)" BUILD_ARCH="$(BUILD_ARCH)" BUILD_OUT="$(BUILD_OUT)" APP_OUT="$(APP_OUT)" RESET="$(RESET)" BLACK="$(BLACK)" RED="$(RED)" GREEN="$(GREEN)" YELLOW="$(YELLOW)" BLUE="$(BLUE)" MAGENTA="$(MAGENTA)" CYAN="$(CYAN)" WHITE="$(WHITE)" DEFAULT="$(DEFAULT)"
-endef
-
-build:
-	@ -mkdir -p $(BUILD_OUT)
-
-$(BUILD_OUT)/$(APP_OUT):
+$(BUILD_DIR)/$(APP_NAME): $(CC_OBJS) $(CXX_OBJS) $(DIRTY_CC_OBJS) $(DIRTY_CXX_OBJS)
 	@ echo -e "$(DEFAULT)Linking: $(CYAN)$@$(RESET)"
-	$(CXX) $(CXXFLAGS) $(INCLUDE) $(OBJS) -o $@ $(LIBRARIES)
-	@ echo -e "$(DEFAULT)Finished Linking: $(GREEN)$(BUILD_OUT)/$(APP_OUT)$(RESET)"
+	$(info $(CXX))
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ -o $@ $(LDFLAGS)
 
-$(BUILD_OUT)/%.obj: src/%.cpp | build
+$(BUILD_DIR)/%.o: src/%.c | build_dir
 	@ echo -e "$(DEFAULT)Compiling: $(DEFAULT)$<$(RESET) -> $(CYAN)$@$(RESET)"
 	@ -mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@
-	@ echo -e "$(DEFAULT)Finished Compiling: $(GREEN)$@$(RESET)"
-
-$(BUILD_OUT)/%.o: src/%.c | build
-	@ echo -e "$(DEFAULT)Compiling: $(DEFAULT)$<$(RESET) -> $(CYAN)$@$(RESET)"
-	@ -mkdir -p $(dir $@)
+	$(info $(CC))
 	$(CC) $(CCFLAGS) $(INCLUDE) -c $< -o $@
-	@ echo -e "$(DEFAULT)Finished Compiling: $(GREEN)$@$(RESET)"
+
+$(BUILD_DIR)/%.obj: src/%.cpp | build_dir
+	@ echo -e "$(DEFAULT)Compiling: $(DEFAULT)$<$(RESET) -> $(CYAN)$@$(RESET)"
+	@ -mkdir -p $(dir $@)
+	$(info $(CXX))
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@
 
 #
 # Clean Targets
@@ -279,18 +217,5 @@ clean_linux:
 clean_windows:
 	$(call clean_with_message,$(BUILD_ROOT)/$(BUILD_PATH_WINDOWS))
 
-# These variables help make 'clean_dirty' less awful
-BUILD_LINUX_RELEASE   := $(BUILD_ROOT)/$(BUILD_PATH_LINUX)/$(BUILD_PATH_RELEASE)
-BUILD_LINUX_DEBUG     := $(BUILD_ROOT)/$(BUILD_PATH_LINUX)/$(BUILD_PATH_DEBUG)
-BUILD_WINDOWS_RELEASE := $(BUILD_ROOT)/$(BUILD_PATH_WINDOWS)/$(BUILD_PATH_RELEASE)
-BUILD_WINDOWS_DEBUG   := $(BUILD_ROOT)/$(BUILD_PATH_WINDOWS)/$(BUILD_PATH_DEBUG)
-
-define _dirty_clean
-	$(shell if [ -d $(1) ]; then echo -e "Cleaned:\t$(DEFAULT)$(RED)$(1)$(RESET)"; rm -rf $(1); fi;)
-endef
-
-clean_dirty: ;@:
-	@ echo -e $(foreach dir,$(SRC_DIRS:src/%=$(BUILD_LINUX_RELEASE)/%),$(call _dirty_clean,$(dir)))
-	@ echo -e $(foreach dir,$(SRC_DIRS:src/%=$(BUILD_LINUX_DEBUG)/%),$(call _dirty_clean,$(dir)))
-	@ echo -e $(foreach dir,$(SRC_DIRS:src/%=$(BUILD_WINDOWS_RELEASE)/%),$(call _dirty_clean,$(dir)))
-	@ echo -e $(foreach dir,$(SRC_DIRS:src/%=$(BUILD_WINDOWS_DEBUG)/%),$(call _dirty_clean,$(dir)))
+clean_dirty:
+	@ $(foreach directory,$(wildcard $(BUILD_ROOT)/*),$(foreach clean_dir,$(SRC_DIRS:src/%=%),-rm -rf $(directory)/$(clean_dir); echo -e "$(DEFAULT)Cleaned: $(RED)$(directory)/$(clean_dir)$(RESET)"))
