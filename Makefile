@@ -10,9 +10,8 @@ WINDOWS_CC  := @x86_64-w64-mingw32-gcc
 endif
 
 # LSAN_OPTIONS=verbosity=1:log_threads=1 # Use this environment variable for more verbosity with address sanitizer
-LINUX_DEBUG_FLAGS := -fsanitize=address
-WINDOWS_DEBUG_FLAGS :=
-export DEBUG_FLAGS ?= -g -Wall -O0 -D NOSTALGIA_DEBUGGING
+LINUX_DEBUG_FLAGS := -fsanitize=address -g -Wall -O0 -D NOSTALGIA_DEBUGGING
+WINDOWS_DEBUG_FLAGS := -g -Wall -O0 -D NOSTALGIA_DEBUGGING
 COMMON_FLAGS := -frtti -D COMPILER_FORWARD_DECLARATIONS
 CXX_FLAGS := -std=c++20
 
@@ -49,6 +48,7 @@ export CXX         ?= $(LINUX_CXX)
 export CC          ?= $(LINUX_CC)
 export INCLUDE     ?= $(COMMON_INCLUDE) $(LINUX_INCLUDE)
 export LDFLAGS     ?= $(LINUX_LIBRARIES)
+export DEBUG_FLAGS ?= $(LINUX_DEBUG_FLAGS)
 ifeq ($(OS),Windows_NT)
 export BUILD_ARCH  ?= $(BUILD_PATH_WINDOWS)
 export APP_ARCH    ?= $(APP_NAME_WINDOWS)
@@ -56,22 +56,24 @@ export CXX         ?= $(WINDOWS_CXX)
 export CC          ?= $(WINDOWS_CC)
 export INCLUDE     ?= $(COMMON_INCLUDE) $(WINDOWS_INCLUDE)
 export LDFLAGS     ?= $(WINDOWS_LIBRARIES)
+export DEBUG_FLAGS ?= $(WINDOWS_DEBUG_FLAGS)
 endif
 
 export CXXFLAGS    ?= $(COMMON_FLAGS) $(CXX_FLAGS)
 export CCFLAGS     ?= $(COMMON_FLAGS)
 
-export APP_NAME ?= $(APP_VERSION)$(APP_ARCH)
+export APP_NAME ?= $(APP_VERSION)_$(APP_ARCH)
 export BUILD_DIR ?= $(BUILD_ROOT)/$(BUILD_ARCH)_$(BUILD_VERSION)
 
 VPATH := $(SRC_DIRS) $(DIRTY_SRC_DIRS)
 
 SRC_DIRS :=    \
 	src/app    \
-	src/system
+	src/system \
+	src/ui     \
 
-DIRTY_SRC_DIRS :=            \
-	src/thirdparty/DearImGui \
+# DIRTY_SRC_DIRS :=            \
+# 	src/thirdparty/DearImGui \
 
 
 CC_SRCS        := $(foreach directory,$(SRC_DIRS),$(wildcard $(directory)/*.c))
@@ -143,7 +145,7 @@ ifeq ($(OS),Windows_NT)
 endif
 	$(eval CXX := $(LINUX_CXX))
 	$(eval CC := $(LINUX_CC))
-	$(eval DEBUG_FLAGS += $(LINUX_DEBUG_FLAGS))
+	$(eval DEBUG_FLAGS := $(LINUX_DEBUG_FLAGS))
 	$(eval CXXFLAGS += $(LINUX_FLAGS))
 	@ echo -e "$(DEFAULT)::Architecture - Linux$(RESET)"
 
@@ -156,7 +158,7 @@ ifneq ($(OS),Windows_NT)
 endif
 	$(eval CXX := $(WINDOWS_CXX))
 	$(eval CC := $(WINDOWS_CC))
-	$(eval DEBUG_FLAGS := $(filter-out -fsanitize=address,$(DEBUG_FLAGS)) $(WINDOWS_DEBUG_FLAGS))
+	$(eval DEBUG_FLAGS := $(WINDOWS_DEBUG_FLAGS))
 	$(eval CXXFLAGS := $(WINDOWS_FLAGS))
 	@ echo -e "$(DEFAULT)::Architecture - Windows$(RESET)"
 
@@ -177,19 +179,16 @@ build_dir:
 
 $(BUILD_DIR)/$(APP_NAME): $(CC_OBJS) $(CXX_OBJS) $(DIRTY_CC_OBJS) $(DIRTY_CXX_OBJS)
 	@ echo -e "$(DEFAULT)Linking: $(CYAN)$@$(RESET)"
-	$(info $(CXX))
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ -o $@ $(LDFLAGS)
 
 $(BUILD_DIR)/%.o: src/%.c | build_dir
 	@ echo -e "$(DEFAULT)Compiling: $(DEFAULT)$<$(RESET) -> $(CYAN)$@$(RESET)"
 	@ -mkdir -p $(dir $@)
-	$(info $(CC))
 	$(CC) $(CCFLAGS) $(INCLUDE) -c $< -o $@
 
 $(BUILD_DIR)/%.obj: src/%.cpp | build_dir
 	@ echo -e "$(DEFAULT)Compiling: $(DEFAULT)$<$(RESET) -> $(CYAN)$@$(RESET)"
 	@ -mkdir -p $(dir $@)
-	$(info $(CXX))
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@
 
 #
@@ -218,4 +217,4 @@ clean_windows:
 	$(call clean_with_message,$(BUILD_ROOT)/$(BUILD_PATH_WINDOWS))
 
 clean_dirty:
-	@ $(foreach directory,$(wildcard $(BUILD_ROOT)/*),$(foreach clean_dir,$(SRC_DIRS:src/%=%),-rm -rf $(directory)/$(clean_dir); echo -e "$(DEFAULT)Cleaned: $(RED)$(directory)/$(clean_dir)$(RESET)"))
+	@ echo -e $(foreach directory,$(wildcard $(BUILD_ROOT)/*),$(foreach clean_dir,$(SRC_DIRS:src/%=%),$(shell rm -rf $(directory)/$(clean_dir) && echo -e "$(DEFAULT)Cleaned: $(RED)$(directory)/$(clean_dir)$(RESET)")))
