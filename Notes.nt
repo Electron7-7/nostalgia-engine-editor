@@ -5,3 +5,8 @@ This is the Nostalgia Editor, the editor program for making games in the Nostalg
 Today I want to start working on the editor application so I can eventually begin working on map files.
 
 Well, I spent the first hour redoing the Makefile, but it was worth it to get rid of all that nasty nasty shit.
+
+[06/17/25]
+Today, I want to re-format the project and how it uses the Nostalgia library; I'm thinking that the library's repository is cloned to a sub-directory that the Makefile checks before building the app. If there are commits that can be pulled, or the library needs to be updated in any way, the Makefile will pull the remote changes, re-build the library, and move it into the correct folder. I'll also ignore the library and the cloned repo folder so that I don't need to commit changes to the library in the editor's repository. This means I'll also have to ignore the "include" directory (or at least all the files inside it).
+
+Finished!! I had to tweak Nostalgia's Makefile a bit as well, but now this repository will automatically install/update the engine library when building!
