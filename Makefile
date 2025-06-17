@@ -17,7 +17,7 @@ CXX_FLAGS := -std=c++20
 
 LINUX_INCLUDE := -I src/system/linux/include
 WINDOWS_INCLUDE := -I src/system/windows/include
-COMMON_INCLUDE := -I src/ -I src/include
+COMMON_INCLUDE := -I src/ -I src/include/Nostalgia
 
 LINUX_LIBRARIES := -L src/system/linux/lib -l glfw3 -l NostalgiaEngine
 WINDOWS_LIBRARIES := -L src/system/windows/lib -l glfw-lib-mingw-w64/glfw3 -l gdi32 -l NostalgiaEngine
@@ -72,9 +72,7 @@ SRC_DIRS :=    \
 	src/system \
 	src/ui     \
 
-# DIRTY_SRC_DIRS :=            \
-# 	src/thirdparty/DearImGui \
-
+DIRTY_SRC_DIRS :=
 
 CC_SRCS        := $(foreach directory,$(SRC_DIRS),$(wildcard $(directory)/*.c))
 CXX_SRCS       := $(foreach directory,$(SRC_DIRS),$(wildcard $(directory)/*.cpp))
@@ -86,7 +84,15 @@ export CXX_OBJS       ?= $(addprefix $(BUILD_DIR)/,$(subst .cpp,.obj,$(CXX_SRCS:
 export DIRTY_CC_OBJS  ?= $(addprefix $(BUILD_DIR)/,$(subst .c,.o,$(DIRTY_CC_SRCS:src/%=%)))
 export DIRTY_CXX_OBJS ?= $(addprefix $(BUILD_DIR)/,$(subst .cpp,.obj,$(DIRTY_CXX_SRCS:src/%=%)))
 
+EXTERNAL := src/external
 
+GIT := git
+# Nostalgia Library variables
+NOSTALGIA_REPO_NAME := nostalgia-game-engine
+NOSTALGIA_REPO_URL   := https://github.com/Electron7-7/$(NOSTALGIA_REPO_NAME)
+
+
+# ANSI color code variables
 export RESET   ?= \\033[0m
 export BLACK   ?= \\033[30m
 export RED     ?= \\033[31m
@@ -99,11 +105,11 @@ export WHITE   ?= \\033[37m
 export DEFAULT ?= \\033[39m
 
 
-.PHONY: build sublime linux windows debug release resources build_dir clean clean_debug clean_release clean_linux clean_windows clean_dirty
+.PHONY: build update_library sublime linux windows debug release resources build_dir clean clean_debug clean_release clean_linux clean_windows clean_dirty
 
-build:
+build: update_library
 	@ echo -e "$(DEFAULT)::Compiling application objects$(RESET)"
-	@ echo -e "$(DEFAULT)::Compile command: $(CXX:@%=%) $(YELLOW)(CXXFLAGS) (INCLUDE)$(DEFAULT) -c <source file> -o <object file>$(RESET)"
+	@ echo -e "$(DEFAULT)::Compile command: ($(CXX:@%=%)/$(CC:@%=%)) $(YELLOW)(CXXFLAGS) (INCLUDE)$(DEFAULT) -c <source file> -o <object file>$(RESET)"
 	@ echo -e "$(DEFAULT)::Variable Definitions:$(RESET)"
 	@ echo -e "\t$(YELLOW)CXXFLAGS: $(DEFAULT)$(CXXFLAGS)$(RESET)"
 	@ echo -e "\t$(YELLOW)INCLUDE: $(DEFAULT)$(INCLUDE)$(RESET)\n"
@@ -119,6 +125,23 @@ build:
 
 	@ -rm -f $(BUILD_DIR)/$(APP_NAME) # in case it already exists
 	@ $(MAKE) -s $(BUILD_DIR)/$(APP_NAME)
+
+update_library: $(EXTERNAL)/$(NOSTALGIA_REPO_NAME) src/system/$(BUILD_ARCH)/lib/libNostalgiaEngine.a src/include/Nostalgia
+	@ cp $(EXTERNAL)/$(NOSTALGIA_REPO_NAME)/build/$(BUILD_ARCH)_static_release/libNostalgiaEngine.a src/system/$(BUILD_ARCH)/lib/libNostalgiaEngine.a
+	@ cp -r $(EXTERNAL)/$(NOSTALGIA_REPO_NAME)/build/$(BUILD_ARCH)_static_release/include/* src/include/Nostalgia
+
+src/system/$(BUILD_ARCH)/lib/libNostalgiaEngine.a:
+	@ cd $(EXTERNAL)/$(NOSTALGIA_REPO_NAME) && $(GIT) pull
+	@ $(MAKE) -s $(BUILD_ARCH) static install -C $(EXTERNAL)/$(NOSTALGIA_REPO_NAME)
+
+src/include/Nostalgia:
+	@ -mkdir -p $@
+
+$(EXTERNAL)/$(NOSTALGIA_REPO_NAME): $(EXTERNAL)
+	$(GIT) clone -b indev $(NOSTALGIA_REPO_URL) $@
+
+$(EXTERNAL):
+	@ -mkdir -p $(EXTERNAL)
 
 # This target is for disabling the ANSI colors. The reason it's called 'sublime' (and an example use-case) is because
 # Sublime Text's output panel doesn't support ANSI colors natively, so I call this target in every build system that's
@@ -177,9 +200,9 @@ release:
 build_dir:
 	@ -mkdir -p $(BUILD_DIR)
 
-$(BUILD_DIR)/$(APP_NAME): $(CC_OBJS) $(CXX_OBJS) $(DIRTY_CC_OBJS) $(DIRTY_CXX_OBJS)
+$(BUILD_DIR)/$(APP_NAME):
 	@ echo -e "$(DEFAULT)Linking: $(CYAN)$@$(RESET)"
-	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ -o $@ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $(CC_OBJS) $(CXX_OBJS) $(DIRTY_CC_OBJS) $(DIRTY_CXX_OBJS) -o $@ $(LDFLAGS)
 
 $(BUILD_DIR)/%.o: src/%.c | build_dir
 	@ echo -e "$(DEFAULT)Compiling: $(DEFAULT)$<$(RESET) -> $(CYAN)$@$(RESET)"
@@ -201,6 +224,8 @@ endef
 
 clean:
 	$(call clean_with_message,$(BUILD_ROOT))
+	$(call clean_with_message,$(EXTERNAL))
+	$(call clean_with_message,src/include/Nostalgia)
 
 clean_debug:
 	$(call clean_with_message,$(BUILD_LINUX_DEBUG))
