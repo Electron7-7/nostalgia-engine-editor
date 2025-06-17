@@ -1,3 +1,7 @@
 .cache/
 build/
+src/external
+src/include/Nostalgia
+src/system/linux/lib/libNostalgiaEngine.a
+src/system/linux/windows/libNostalgiaEngine.a
 compile_commands.json
