@@ -17,7 +17,7 @@ CXX_FLAGS := -std=c++20
 
 LINUX_INCLUDE := -I src/system/linux/include
 WINDOWS_INCLUDE := -I src/system/windows/include
-COMMON_INCLUDE := -I src/ -I src/include/Nostalgia
+COMMON_INCLUDE := -I src/ -I src/include
 
 LINUX_LIBRARIES := -L src/system/linux/lib -l glfw3 -l NostalgiaEngine
 WINDOWS_LIBRARIES := -L src/system/windows/lib -l glfw-lib-mingw-w64/glfw3 -l gdi32 -l NostalgiaEngine
@@ -89,7 +89,8 @@ EXTERNAL := src/external
 GIT := git
 # Nostalgia Library variables
 NOSTALGIA_REPO_NAME := nostalgia-game-engine
-NOSTALGIA_REPO_URL   := https://github.com/Electron7-7/$(NOSTALGIA_REPO_NAME)
+NOSTALGIA_REPO_URL  := https://github.com/Electron7-7/$(NOSTALGIA_REPO_NAME)
+NOSTALGIA_INCLUDE   := src/include
 
 
 # ANSI color code variables
@@ -127,17 +128,17 @@ build: update_library
 	@ $(MAKE) -s $(BUILD_DIR)/$(APP_NAME)
 
 ifndef NO_UPDATE_LIB
-update_library: $(EXTERNAL)/$(NOSTALGIA_REPO_NAME) src/system/$(BUILD_ARCH)/lib/libNostalgiaEngine.a src/include/Nostalgia
+update_library: $(EXTERNAL)/$(NOSTALGIA_REPO_NAME) src/system/$(BUILD_ARCH)/lib/libNostalgiaEngine.a $(NOSTALGIA_INCLUDE)
 	@ cd $(EXTERNAL)/$(NOSTALGIA_REPO_NAME) && $(GIT) pull
 	@ $(MAKE) -s $(BUILD_ARCH) static install -C $(EXTERNAL)/$(NOSTALGIA_REPO_NAME)
 	@ cp $(EXTERNAL)/$(NOSTALGIA_REPO_NAME)/build/$(BUILD_ARCH)_static_release/libNostalgiaEngine.a src/system/$(BUILD_ARCH)/lib/libNostalgiaEngine.a
-	@ cp -r $(EXTERNAL)/$(NOSTALGIA_REPO_NAME)/build/$(BUILD_ARCH)_static_release/include/* src/include/Nostalgia
+	@ cp -r $(EXTERNAL)/$(NOSTALGIA_REPO_NAME)/build/$(BUILD_ARCH)_static_release/include/* $(NOSTALGIA_INCLUDE)
 endif
 
 src/system/$(BUILD_ARCH)/lib/libNostalgiaEngine.a:
 	@ $(MAKE) -s $(BUILD_ARCH) static install -C $(EXTERNAL)/$(NOSTALGIA_REPO_NAME)
 
-src/include/Nostalgia:
+$(NOSTALGIA_INCLUDE):
 	@ -mkdir -p $@
 
 $(EXTERNAL)/$(NOSTALGIA_REPO_NAME): $(EXTERNAL)
@@ -228,7 +229,7 @@ endef
 clean:
 	$(call clean_with_message,$(BUILD_ROOT))
 	$(call clean_with_message,$(EXTERNAL))
-	$(call clean_with_message,src/include/Nostalgia)
+	$(call clean_with_message,src/include)
 
 clean_debug:
 	$(call clean_with_message,$(BUILD_LINUX_DEBUG))
