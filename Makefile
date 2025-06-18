@@ -115,7 +115,7 @@ build: update_library
 	@ echo -e "\t$(YELLOW)CXXFLAGS: $(DEFAULT)$(CXXFLAGS)$(RESET)"
 	@ echo -e "\t$(YELLOW)INCLUDE: $(DEFAULT)$(INCLUDE)$(RESET)\n"
 
-	@ $(MAKE) -s $(CC_OBJS) $(CXX_OBJS) $(DIRTY_CC_OBJS) $(DIRTY_CXX_OBJS)
+	$(MAKE) -s $(CC_OBJS) $(CXX_OBJS) $(DIRTY_CC_OBJS) $(DIRTY_CXX_OBJS)
 
 	@ echo -e "$(DEFAULT)::Linking command: $(CXX:@%=%)$(YELLOW) (CXXFLAGS) (CC_OBJS) (CXX_OBJS) (DIRTY_CC_OBJS) (DIRTY_CXX_OBJS) $(DEFAULT)-o$(YELLOW) (BUILD_DIR)$(DEFAULT)/$(YELLOW)(APP_NAME) (LDFLAGS)$(RESET)"
 	@ echo -e "$(DEFAULT)::Variables:$(RESET)"
@@ -125,7 +125,7 @@ build: update_library
 	@ echo -e "\t$(YELLOW)APP_NAME: $(DEFAULT)$(APP_NAME)$(RESET)\n"
 
 	@ -rm -f $(BUILD_DIR)/$(APP_NAME) # in case it already exists
-	@ $(MAKE) -s $(BUILD_DIR)/$(APP_NAME)
+	$(MAKE) -s $(BUILD_DIR)/$(APP_NAME)
 
 ifndef NO_UPDATE_LIB
 update_library: $(EXTERNAL)/$(NOSTALGIA_REPO_NAME) src/system/$(BUILD_ARCH)/lib/libNostalgiaEngine.a $(NOSTALGIA_INCLUDE)
