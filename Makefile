@@ -126,12 +126,15 @@ build: update_library
 	@ -rm -f $(BUILD_DIR)/$(APP_NAME) # in case it already exists
 	@ $(MAKE) -s $(BUILD_DIR)/$(APP_NAME)
 
+ifndef NO_UPDATE_LIB
 update_library: $(EXTERNAL)/$(NOSTALGIA_REPO_NAME) src/system/$(BUILD_ARCH)/lib/libNostalgiaEngine.a src/include/Nostalgia
+	@ cd $(EXTERNAL)/$(NOSTALGIA_REPO_NAME) && $(GIT) pull
+	@ $(MAKE) -s $(BUILD_ARCH) static install -C $(EXTERNAL)/$(NOSTALGIA_REPO_NAME)
 	@ cp $(EXTERNAL)/$(NOSTALGIA_REPO_NAME)/build/$(BUILD_ARCH)_static_release/libNostalgiaEngine.a src/system/$(BUILD_ARCH)/lib/libNostalgiaEngine.a
 	@ cp -r $(EXTERNAL)/$(NOSTALGIA_REPO_NAME)/build/$(BUILD_ARCH)_static_release/include/* src/include/Nostalgia
+endif
 
 src/system/$(BUILD_ARCH)/lib/libNostalgiaEngine.a:
-	@ cd $(EXTERNAL)/$(NOSTALGIA_REPO_NAME) && $(GIT) pull
 	@ $(MAKE) -s $(BUILD_ARCH) static install -C $(EXTERNAL)/$(NOSTALGIA_REPO_NAME)
 
 src/include/Nostalgia:
