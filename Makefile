@@ -228,8 +228,13 @@ endef
 
 clean:
 	$(call clean_with_message,$(BUILD_ROOT))
+
+clean_nostalgia:
 	$(call clean_with_message,$(EXTERNAL))
-	$(call clean_with_message,src/include)
+	$(call clean_with_message,$(NOSTALGIA_INCLUDE))
+
+deep_clean: clean clean_nostalgia
+	@ echo -e "I recommend running 'make update_library' to re-install the Nostalgia Engine library & its header files (the 'build' target will automatically call 'update_library' first, but it's nice to have the headers if ur using clangd/LSP)"
 
 clean_debug:
 	$(call clean_with_message,$(BUILD_LINUX_DEBUG))
