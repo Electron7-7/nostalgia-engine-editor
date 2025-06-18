@@ -115,7 +115,7 @@ build: update_library
 	@ echo -e "\t$(YELLOW)CXXFLAGS: $(DEFAULT)$(CXXFLAGS)$(RESET)"
 	@ echo -e "\t$(YELLOW)INCLUDE: $(DEFAULT)$(INCLUDE)$(RESET)\n"
 
-	@ $(MAKE) $(CC_OBJS) $(CXX_OBJS) $(DIRTY_CC_OBJS) $(DIRTY_CXX_OBJS)
+	@ $(MAKE) -s $(CC_OBJS) $(CXX_OBJS) $(DIRTY_CC_OBJS) $(DIRTY_CXX_OBJS)
 
 	@ echo -e "$(DEFAULT)::Linking command: $(CXX:@%=%)$(YELLOW) (CXXFLAGS) (CC_OBJS) (CXX_OBJS) (DIRTY_CC_OBJS) (DIRTY_CXX_OBJS) $(DEFAULT)-o$(YELLOW) (BUILD_DIR)$(DEFAULT)/$(YELLOW)(APP_NAME) (LDFLAGS)$(RESET)"
 	@ echo -e "$(DEFAULT)::Variables:$(RESET)"
@@ -125,18 +125,18 @@ build: update_library
 	@ echo -e "\t$(YELLOW)APP_NAME: $(DEFAULT)$(APP_NAME)$(RESET)\n"
 
 	@ -rm -f $(BUILD_DIR)/$(APP_NAME) # in case it already exists
-	@ $(MAKE) $(BUILD_DIR)/$(APP_NAME)
+	@ $(MAKE) -s $(BUILD_DIR)/$(APP_NAME)
 
 ifndef NO_UPDATE_LIB
 update_library: $(EXTERNAL)/$(NOSTALGIA_REPO_NAME) src/system/$(BUILD_ARCH)/lib/libNostalgiaEngine.a $(NOSTALGIA_INCLUDE)
 	@ cd $(EXTERNAL)/$(NOSTALGIA_REPO_NAME) && $(GIT) pull
-	@ $(MAKE) $(BUILD_ARCH) static install -C $(EXTERNAL)/$(NOSTALGIA_REPO_NAME)
+	@ $(MAKE) -s $(BUILD_ARCH) static install -C $(EXTERNAL)/$(NOSTALGIA_REPO_NAME)
 	@ cp $(EXTERNAL)/$(NOSTALGIA_REPO_NAME)/build/$(BUILD_ARCH)_static_release/libNostalgiaEngine.a src/system/$(BUILD_ARCH)/lib/libNostalgiaEngine.a
 	@ cp -r $(EXTERNAL)/$(NOSTALGIA_REPO_NAME)/build/$(BUILD_ARCH)_static_release/include/* $(NOSTALGIA_INCLUDE)
 endif
 
 src/system/$(BUILD_ARCH)/lib/libNostalgiaEngine.a:
-	@ $(MAKE) $(BUILD_ARCH) static install -C $(EXTERNAL)/$(NOSTALGIA_REPO_NAME)
+	@ $(MAKE) -s $(BUILD_ARCH) static install -C $(EXTERNAL)/$(NOSTALGIA_REPO_NAME)
 
 $(NOSTALGIA_INCLUDE):
 	@ -mkdir -p $@
